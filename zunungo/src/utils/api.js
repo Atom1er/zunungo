@@ -1,6 +1,6 @@
 import { initializeApp, } from 'firebase/app';
 import { doc, getFirestore, collection, getDocs, setDoc, query, where, deleteDoc } from 'firebase/firestore/lite';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import 'react-toastify/dist/ReactToastify.css';
@@ -35,6 +35,23 @@ onAuthStateChanged(auth, (user) => {
         // ...
     }
 });
+
+const resetPassword = async (email, next) => {
+    sendPasswordResetEmail(auth, email)
+        .then(() => {
+            // Password reset email sent!
+            next({ status: true, data: true });
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log("errorMessage: ", errorMessage)
+            toast.error("Une erreur s'est produite ! Veuillez réessayer plus tard / Unable to create! Please try again later");
+            next({ status: false, data: false });
+            
+            // ..
+        });
+}
 
 const getCurrentUser = async (uid, next) => {
 
@@ -371,5 +388,6 @@ export {
     uploadFiles,
     addUserFilesRecord,
     deleteFilesRecord,
-    deleteFile
+    deleteFile,
+    resetPassword
 };
