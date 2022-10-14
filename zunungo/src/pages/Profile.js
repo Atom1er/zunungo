@@ -195,20 +195,20 @@ export default function Profile({ user, setUser, lang, setLang }) {
 
             if (type == 1) {
               setRefreshing(true);
-        
+
               var temp1 = userSelectedFiles;
-        
+
               temp1.splice(indexOrImage, 1);
-        
+
               setuserSelectedFiles(temp1);
-        
+
               console.log('userSelectedFiles: ', userSelectedFiles);
-        
+
               setTimeout(() => {
                 setRefreshing(false);
               }, 1000)
             } else {
-        
+
               deleteFile(indexOrImage, (res) => {
                 getUserFiles(user, (ufres) => {
                   if (ufres.status) {
@@ -221,21 +221,27 @@ export default function Profile({ user, setUser, lang, setLang }) {
         },
         {
           label: 'No',
-          onClick: () => {console.log('Click No')}
+          onClick: () => { console.log('Click No') }
         }
       ]
     });
   }
 
   const downloadImg = (image) => {
-    var blb = new Blob([image.url])
-    saveAs(image.url, user.nom)
+    const xhr = new XMLHttpRequest();
+    xhr.responseType = 'blob';
+    xhr.onload = (event) => {
+      const blob = xhr.response;
+      saveAs(blob, image.original_name);
+    };
+    xhr.open('GET', image.url);
+    xhr.send();
   }
 
 
   const uploadImg = async (files, index) => {
     if (index < files.length) {
-      setUploading(true);
+      setRefreshing(true);
       var nm = uuidv4();
       uploadFiles({ file: files[index], name: nm, ext: files[index] }, (res) => {
         console.log("res: ", res);
@@ -253,18 +259,26 @@ export default function Profile({ user, setUser, lang, setLang }) {
               uploadImg(files, nIndex);
             } else {
               toast.error("Une erreur inattendue s'est produite Veuillez réessayer plus tard! / An unexpected error has occurred. Please try again later!" + upRes.error);
-              setUploading(false);
+              setRefreshing(false);
             }
           })
 
         } else {
           toast.error("Une erreur inattendue s'est produite Veuillez réessayer plus tard! / An unexpected error has occurred. Please try again later!" + res.error);
-          setUploading(false);
+          setRefreshing(false);
         }
       });
-    } else {
 
-      setUploading(false);
+    } else {
+      setuserSelectedFiles([]);
+      console.log('here1');
+      getUserFiles(user, (ufres) => {
+        console.log('here2: ', ufres);
+        if (ufres.status) {
+          setuserFiles(ufres.data);
+          setRefreshing(false);
+        }
+      })
     }
   }
 
@@ -1777,10 +1791,10 @@ export default function Profile({ user, setUser, lang, setLang }) {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', padding: '10px' }}>
                       {!showdocument ? (
-                        <button type="button" className="btn btn-secondary btn-sm col-md-4 col-sm-6 justify-content-end m-10" style={{ height: '37px' }} onClick={() => setshowdocument(true)}>Mes Documents / Mes Files</button>
+                        <button type="button" className="btn btn-secondary btn-sm col-md-8 col-sm-8 justify-content-end m-10" style={{ minHeight: '37px' }} onClick={() => setshowdocument(true)}>Mes Documents (photos, certificats...) / Mes Files (photos, certificats...)</button>
                       ) : (
 
-                        <div className="card panel-default" style={{ margin: '10px 4px' }}>
+                        <div className="card panel-default col-12" style={{ margin: '10px 4px' }}>
                           <div className="card-header">
                             - Documents -
                           </div>
@@ -1808,10 +1822,10 @@ export default function Profile({ user, setUser, lang, setLang }) {
                               <div className='col-12 row'>
                                 <div className='col-12 row'>
                                   <div className="mb-3">
-                                    <label htmlFor="formFileMultiple" className="form-label" style={{width: '100%'}}>
+                                    <label htmlFor="formFileMultiple" className="form-label" style={{ width: '100%' }}>
                                       <input className="form-control" type="file" id="formFileMultiple" multiple label="Your label here." style={{ display: 'none' }} onChange={(e) => handleFileUpload(e)} />
                                       <div style={{ margin: '15px auto', width: '100%', display: 'flex' }}>
-                                        <div style={{margin: 'auto'}} className="btn btn-warning btn-sm"> <i className="fa fa-image" style={{ marginRight: '5px' }}></i> Ajouter Ma photo Format Passport</div>
+                                        <div style={{ margin: 'auto' }} className="btn btn-warning btn-sm"> <i className="fa fa-image" style={{ marginRight: '5px' }}></i> Ajouter Ma photo Format Passport</div>
                                       </div>
                                     </label>
                                     {!refreshing ? (
@@ -1831,21 +1845,38 @@ export default function Profile({ user, setUser, lang, setLang }) {
                                             <button type="button" className="btn btn-warning btn-sm" onClick={() => uploadImg(userSelectedFiles, 0)}> <i className="fa fa-upload" style={{ marginRight: '5px', color: 'red' }}></i> Enregistrer / Save </button>
                                           </div>
                                         ) : null}
-                                      </div>) : null}
-                                    <div className='col-12 d-flex flex-row' style={{ alignItems: 'end', margin: '15px' }}>
-                                      {
-                                        userFiles.map((image, index) => {
-                                          return (
-                                            <div key={'image-' + index} className='d-flex flex-column' style={{ margin: '7px' }}>
-                                              <img src={image.url} alt="" style={{ transform: "scale(0.8)", width: '75px', maxHeight: '75px', margin: 'auto 4px', border: '3px solid #3f51b5', borderRadius: '4px' }} />
-                                              <div className='d-flex flex-row' style={{ margin: '7px auto' }}>
-                                                <div style={{ margin: '4px', cursor: 'pointer' }} onClick={() => removeImg(2, image)}> <i className="fa fa-trash " style={{ marginRight: '5px', color: 'red' }}></i></div>
-                                                <div style={{ margin: '4px', cursor: 'pointer' }} onClick={() => downloadImg(image)}> <i className="fa fa-download " style={{ marginRight: '5px', color: 'dark-green' }}></i></div>
-                                              </div>
-                                            </div>
-                                          )
-                                        })}
-                                    </div>
+                                      </div>) : (
+                                      <div class="spinner-border text-warning" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                      </div>
+                                    )}
+                                    {!refreshing ? (
+                                      <div className="card panel-default col-12" style={{ margin: '10px 4px' }}>
+                                        <div className="card-header">
+                                          Existant / Existing
+                                        </div>
+                                        <div className="row card-body">
+                                          <div className='col-12 d-flex flex-row' style={{ alignItems: 'end', margin: '15px' }}>
+                                            {
+                                              userFiles.map((image, index) => {
+                                                return (
+                                                  <div key={'image-' + index} className='d-flex flex-column' style={{ margin: '7px' }}>
+                                                    <img src={image.url} alt="" style={{ transform: "scale(0.8)", width: '75px', maxHeight: '75px', margin: 'auto 4px', border: '3px solid #3f51b5', borderRadius: '4px' }} />
+                                                    <div className='d-flex flex-row' style={{ margin: '7px auto' }}>
+                                                      <div style={{ margin: '4px', cursor: 'pointer' }} onClick={() => removeImg(2, image)}> <i className="fa fa-trash " style={{ marginRight: '5px', color: 'red' }}></i></div>
+                                                      <div style={{ margin: '4px', cursor: 'pointer' }} onClick={() => downloadImg(image)}> <i className="fa fa-download " style={{ marginRight: '5px', color: 'dark-green' }}></i></div>
+                                                    </div>
+                                                  </div>
+                                                )
+                                              })}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div class="spinner-border text-warning" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                      </div>
+                                    )}
 
                                   </div>
                                 </div>

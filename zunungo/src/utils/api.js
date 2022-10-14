@@ -156,8 +156,8 @@ const updateApplicationData = async (dt, isAdmin, next) => {
                             "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
-                            senderName: isAdmin ? user.email : "contact@zunungo-group.com",
-                            senderEmail: isAdmin ? user.email : "contact@zunungo-group.com",
+                            from: "contact@zunungo-group.com",
+                            to: isAdmin ? user.email : "contact@zunungo-group.com",
                             message: msg,
                             date: new Date(),
                             subject: subject,
@@ -291,7 +291,7 @@ const getUserFiles = async (dt, next) => {
 
 const uploadFiles = async (dt, next) => {
     try {
-        var path = 'files/' + dt.name + '/';
+        var path = 'files/' + dt.name + dt.file.name;
         const storageRef = ref(storage, path);
         // 'file' comes from the Blob or File API
         uploadBytes(storageRef, dt.file).then((snapshot) => {
@@ -328,7 +328,7 @@ const addUserFilesRecord = async (dt, next) => {
 
 const deleteFile = async (dt, next) => {
     // Create a reference to the file to delete
-    const desertRef = ref(storage, 'files/' + dt.name);
+    const desertRef = ref(storage, 'files/' + dt.name + dt.original_name);
 
     // Delete the file
     deleteObject(desertRef).then(() => {
@@ -336,6 +336,7 @@ const deleteFile = async (dt, next) => {
         deleteFilesRecord(dt, next);
     }).catch((error) => {
         // Uh-oh, an error occurred!
+        console.log()
         toast.error("Une erreur inattendue est apparue: ", error);
         next({ status: false, data: null, error })
     });

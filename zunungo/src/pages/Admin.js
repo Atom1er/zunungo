@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { getUserData, addNewUserData, updateApplicationData, getUserApplications, getAllApplications, getAllFilesCategories, getUserFiles, updateCatType } from '../utils/api';
+import {
+  getUserData,
+  addNewUserData,
+  updateApplicationData,
+  getUserApplications,
+  getAllApplications,
+  getAllFilesCategories,
+  updateCatType,
+  getUserFiles,
+} from '../utils/api';
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,6 +17,7 @@ import {
   Navigate,
   useLocation
 } from "react-router-dom";
+import { saveAs } from 'file-saver';
 import { toast } from 'react-toastify';
 
 export default function Admin({ user, setUser, lang, setLang }) {
@@ -20,11 +30,12 @@ export default function Admin({ user, setUser, lang, setLang }) {
   const [selectedCat, setselectedCat] = useState('');
   const [newTypeName, setnewTypeName] = useState('');
   const [allowMultipleFiles, setallowMultipleFiles] = useState(true);
-  
+
 
   const [navigateTo, setnavigateTo] = useState("");
   const [showdetails, setshowdetails] = useState(false);
   const [userApplications, setuserApplications] = useState([]);
+  const [userFiles, setuserFiles] = useState([]);
   const [selectedProgramData, setselectedProgramData] = useState({});
   const [selectedUserData, setselectedUserData] = useState({});
 
@@ -62,6 +73,11 @@ export default function Admin({ user, setUser, lang, setLang }) {
     getUserData(obj, (res) => {
       if (res.status) {
         setselectedUserData(res.data[0]);
+        getUserFiles(obj, (res) => {
+          if (res.status) {
+            setuserFiles(res.data);
+          }
+        })
       }
     });
     for (let key in obj.data) {
@@ -120,6 +136,19 @@ export default function Admin({ user, setUser, lang, setLang }) {
     })
   }
 
+  const downloadImg = (image) => {
+    const xhr = new XMLHttpRequest();
+    xhr.responseType = 'blob';
+    xhr.onload = (event) => {
+      const blob = xhr.response;
+      saveAs(blob, image.original_name);
+    };
+    xhr.open('GET', image.url);
+    xhr.send();
+  }
+
+
+
   return (
     <section className="signin" id="about">
       {navigate && <Navigate to={navigateTo} />}
@@ -140,7 +169,7 @@ export default function Admin({ user, setUser, lang, setLang }) {
                       <form name='myForm' id='myForm'>
                         <div className="card panel-default" style={{ margin: '18px 4px' }}>
                           <div className="card-header">
-                            1. Contact Info
+                            Contact Info
                           </div>
                           <div className="row card-body">
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' }}>
@@ -149,6 +178,27 @@ export default function Admin({ user, setUser, lang, setLang }) {
                             </div>
                           </div>
                         </div>
+                        <div className="card panel-default" style={{ margin: '18px 4px' }}>
+                          <div className="card-header">
+                            Files
+                          </div>
+                          <div className="row card-body">
+                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-around', flexWrap: 'wrap' }}>
+                              {userFiles.map((image, index) => {
+                                return (
+                                  <div key={'image-' + index} className='d-flex flex-column' style={{ margin: '7px' }}>
+                                    <img src={image.url} alt="" style={{ transform: "scale(0.8)", width: '75px', maxHeight: '75px', margin: 'auto 4px', border: '3px solid #3f51b5', borderRadius: '4px' }} />
+                                    <div className='d-flex flex-row' style={{ margin: '7px auto' }}>
+                                      {/* <div style={{ margin: '4px', cursor: 'pointer' }} onClick={() => removeImg(2, image)}> <i className="fa fa-trash " style={{ marginRight: '5px', color: 'red' }}></i></div> */}
+                                      <div style={{ margin: '4px', cursor: 'pointer' }} onClick={() => downloadImg(image)}> <i className="fa fa-download " style={{ marginRight: '5px', color: 'dark-green' }}></i></div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="card panel-default" style={{ margin: '18px 4px' }}>
                           <div className="card-header">
                             1. Nom (Name)
@@ -1648,12 +1698,12 @@ export default function Admin({ user, setUser, lang, setLang }) {
                               </div>
                               <input type="text" className="form-control" aria-label="Small" value={newTypeName} onChange={(e) => setnewTypeName(e.target.value)} aria-describedby="inputGroup-sizing-sm" />
                             </div>
-                            
+
                             <div className="form-check col-2" style={{ margin: '0px 10px' }} >
                               <input className="form-check-input" type="checkbox" checked={allowMultipleFiles} onChange={(e) => setallowMultipleFiles(e.target.checked)} id="flexCheckDefault" />
-                                <label className="form-check-label" for="flexCheckDefault">
+                              <label className="form-check-label" for="flexCheckDefault">
                                 Allow Multiple Files
-                                </label>
+                              </label>
                             </div>
                             <button type="button" className="btn btn-secondary btn-sm col-2" style={{ height: '37px', margin: '0px 15px' }} onClick={saveNewCaseType}>Save</button>
                             <button type="button" className="btn btn-danger btn-sm col-2" style={{ height: '37px', margin: '0px 15px' }} onClick={() => setshowNewType(false)}>Cancel</button>
