@@ -324,7 +324,7 @@ export default function Home(props) {
                                     </li>
                                     <li>
                                         <h6>Address</h6>
-                                        <span><a href="http://maps.google.com/?q=4346 katonah avenue, Bronx, NY 10470">4346 katonah avenue,
+                                        <span><a href="http://maps.google.com/?q=845 3rd avenue, New York, NY 10022">4346 katonah avenue,
                                             Bronx, NY 10470</a></span>
                                     </li>
                                     {/* <li>
